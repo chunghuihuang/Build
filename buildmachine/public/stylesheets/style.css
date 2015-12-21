@@ -1,0 +1,119 @@
+body {
+  padding: 10px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: #00B7FF;
+}
+
+
+/* Chrome, Safari, Opera */
+@-webkit-keyframes myfirst {
+    25%   {-ms-transform: rotate(0deg);-webkit-transform: rotate(0deg);transform: rotate(0deg);}
+    26%   {-ms-transform: rotate(90deg);-webkit-transform: rotate(90deg);transform: rotate(90deg);}
+    27%   {-ms-transform: rotate(180deg);-webkit-transform: rotate(180deg);transform: rotate(180deg);}
+    28%   {-ms-transform: rotate(270deg);-webkit-transform: rotate(270deg);transform: rotate(270deg);}
+    29%   {-ms-transform: rotate(360deg);-webkit-transform: rotate(360deg);transform: rotate(360deg);}
+    30%   {-ms-transform: rotate(270deg);-webkit-transform: rotate(270deg);transform: rotate(270deg);}
+    31%   {-ms-transform: rotate(180deg);-webkit-transform: rotate(180deg);transform: rotate(180deg);}
+    32%   {-ms-transform: rotate(0deg);-webkit-transform: rotate(0deg);transform: rotate(0deg);}
+    33%   {-ms-transform: rotate(180deg);-webkit-transform: rotate(180deg);transform: rotate(180deg);}
+    34%   {-ms-transform: rotate(360deg);-webkit-transform: rotate(360deg);transform: rotate(360deg);}
+    35%   {-ms-transform: rotate(0deg);-webkit-transform: rotate(0deg);transform: rotate(0deg);}
+    36%   {-ms-transform: rotate(180deg);-webkit-transform: rotate(180deg);transform: rotate(180deg);}
+    37%   {-ms-transform: rotate(360deg);-webkit-transform: rotate(360deg);transform: rotate(360deg);}
+    38%   {-ms-transform: rotate(180deg);-webkit-transform: rotate(180deg);transform: rotate(180deg);}
+    39%   {-ms-transform: rotate(0deg);-webkit-transform: rotate(0deg);transform: rotate(0deg);}
+    40%   {-ms-transform: scale(1,1);-webkit-transform: scale(1,1);transform: scale(1,1);}
+    45%  {-ms-transform: scale(1,1);-webkit-transform: scale(1,1);transform: scale(1,1);}
+    75%  {-ms-transform: scale(2,2);-webkit-transform: scale(2,2);transform: scale(2,2);}
+    100% {-ms-transform: scale(1,1);-webkit-transform: scale(1,1);transform: scale(1,1);}
+}
+@keyframes myfirst {
+    25%   {-ms-transform: rotate(0deg);-webkit-transform: rotate(0deg);transform: rotate(0deg);}
+    26%   {-ms-transform: rotate(90deg);-webkit-transform: rotate(90deg);transform: rotate(90deg);}
+    27%   {-ms-transform: rotate(180deg);-webkit-transform: rotate(180deg);transform: rotate(180deg);}
+    28%   {-ms-transform: rotate(270deg);-webkit-transform: rotate(270deg);transform: rotate(270deg);}
+    29%   {-ms-transform: rotate(360deg);-webkit-transform: rotate(360deg);transform: rotate(360deg);}
+    30%   {-ms-transform: rotate(270deg);-webkit-transform: rotate(270deg);transform: rotate(270deg);}
+    31%   {-ms-transform: rotate(180deg);-webkit-transform: rotate(180deg);transform: rotate(180deg);}
+    32%   {-ms-transform: rotate(0deg);-webkit-transform: rotate(0deg);transform: rotate(0deg);}
+    33%   {-ms-transform: rotate(180deg);-webkit-transform: rotate(180deg);transform: rotate(180deg);}
+    34%   {-ms-transform: rotate(360deg);-webkit-transform: rotate(360deg);transform: rotate(360deg);}
+    35%   {-ms-transform: rotate(0deg);-webkit-transform: rotate(0deg);transform: rotate(0deg);}
+    36%   {-ms-transform: rotate(180deg);-webkit-transform: rotate(180deg);transform: rotate(180deg);}
+    37%   {-ms-transform: rotate(360deg);-webkit-transform: rotate(360deg);transform: rotate(360deg);}
+    38%   {-ms-transform: rotate(180deg);-webkit-transform: rotate(180deg);transform: rotate(180deg);}
+    39%   {-ms-transform: rotate(0deg);-webkit-transform: rotate(0deg);transform: rotate(0deg);}
+    40%   {-ms-transform: scale(1,1);-webkit-transform: scale(1,1);transform: scale(1,1);}
+    45%  {-ms-transform: scale(1,1);-webkit-transform: scale(1,1);transform: scale(1,1);}
+    75%  {-ms-transform: scale(2,2);-webkit-transform: scale(2,2);transform: scale(2,2);}
+    100% {-ms-transform: scale(1,1);-webkit-transform: scale(1,1);transform: scale(1,1);}
+}
+
+/* Standard syntax */
+@keyframes myfirst_skew {
+    0%   {-ms-transform: rotate(0deg);-webkit-transform: rotate(0deg);transform: rotate(0deg);}
+    1%   {-ms-transform: rotate(90deg);-webkit-transform: rotate(90deg);transform: rotate(90deg);}
+    2%   {-ms-transform: rotate(180deg);-webkit-transform: rotate(180deg);transform: rotate(180deg);}
+    3%   {-ms-transform: rotate(270deg);-webkit-transform: rotate(270deg);transform: rotate(270deg);}
+    4%   {-ms-transform: rotate(360deg);-webkit-transform: rotate(360deg);transform: rotate(360deg);}
+    5%   {-ms-transform: rotate(0deg);-webkit-transform: rotate(0deg);transform: rotate(0deg);}
+    6%   {-ms-transform: rotate(90deg);-webkit-transform: rotate(90deg);transform: rotate(90deg);}
+    8%   {-ms-transform: rotate(180deg);-webkit-transform: rotate(180deg);transform: rotate(180deg);}
+    9%   {-ms-transform: rotate(270deg);-webkit-transform: rotate(270deg);transform: rotate(270deg);}
+    10%   {-ms-transform: rotate(360deg);-webkit-transform: rotate(360deg);transform: rotate(360deg);}
+    11%   {-ms-transform: rotate(0deg);-webkit-transform: rotate(0deg);transform: rotate(0deg);}
+    0%   {-ms-transform: skew(0deg,0deg);-webkit-transform: skew(0deg,0deg);transform: skew(0deg,0deg);}
+    1%   {-ms-transform: skew(60deg,60deg);-webkit-transform: skew(60deg,60deg);transform: skew(60deg,60deg);}
+    2%   {-ms-transform: skew(120deg,120deg);-webkit-transform: skew(120deg,120deg);transform: skew(120deg,120deg);}
+    3%   {-ms-transform: skew(180deg,180deg);-webkit-transform: skew(180deg,180deg);transform: skew(180deg,180deg);}
+    4%   {-ms-transform: skew(270deg,270deg);-webkit-transform: skew(270deg,270deg);transform: skew(270deg,270deg);}
+    5%   {-ms-transform: skew(360deg,360deg);-webkit-transform: skew(360deg,360deg);transform: skew(360deg,360deg);}
+    6%   {-ms-transform: skew(270deg,270deg);-webkit-transform: skew(270deg,270deg);transform: skew(270deg,270deg);}
+    8%   {-ms-transform: skew(180deg,180deg);-webkit-transform: skew(180deg,180deg);transform: skew(180deg,180deg);}
+    9%   {-ms-transform: skew(120deg,120deg);-webkit-transform: skew(120deg,120deg);transform: skew(120deg,120deg);}
+    10%   {-ms-transform: skew(60deg,60deg);-webkit-transform: skew(60deg,60deg);transform: skew(60deg,60deg);}
+    11%   {-ms-transform: skew(0deg,0deg);-webkit-transform: skew(0deg,0deg);transform: skew(0deg,0deg);}
+    12%   {-ms-transform: scale(1,1);-webkit-transform: scale(1,1);transform: scale(1,1);}
+    20%   {-ms-transform: scale(1,1);-webkit-transform: scale(1,1);transform: scale(1,1);}
+    25%  {-ms-transform: scale(1,1);-webkit-transform: scale(1,1);transform: scale(1,1);}
+    75%  {-ms-transform: scale(2,2);-webkit-transform: scale(2,2);transform: scale(2,2);}
+    100% {-ms-transform: scale(1,1);-webkit-transform: scale(1,1);transform: scale(1,1);}
+}
+/* Standard syntax */
+@keyframes myfirst_rotate {
+    0%   {-ms-transform: rotate(0deg);-webkit-transform: rotate(0deg);transform: rotate(0deg);}
+    1%   {-ms-transform: rotate(90deg);-webkit-transform: rotate(90deg);transform: rotate(90deg);}
+    2%   {-ms-transform: rotate(180deg);-webkit-transform: rotate(180deg);transform: rotate(180deg);}
+    3%   {-ms-transform: rotate(270deg);-webkit-transform: rotate(270deg);transform: rotate(270deg);}
+    4%   {-ms-transform: rotate(360deg);-webkit-transform: rotate(360deg);transform: rotate(360deg);}
+    5%   {-ms-transform: rotate(0deg);-webkit-transform: rotate(0deg);transform: rotate(0deg);}
+    6%   {-ms-transform: rotate(90deg);-webkit-transform: rotate(90deg);transform: rotate(90deg);}
+    8%   {-ms-transform: rotate(180deg);-webkit-transform: rotate(180deg);transform: rotate(180deg);}
+    9%   {-ms-transform: rotate(270deg);-webkit-transform: rotate(270deg);transform: rotate(270deg);}
+    10%   {-ms-transform: rotate(360deg);-webkit-transform: rotate(360deg);transform: rotate(360deg);}
+    11%   {-ms-transform: rotate(0deg);-webkit-transform: rotate(0deg);transform: rotate(0deg);}
+    12%   {-ms-transform: scale(1,1);-webkit-transform: scale(1,1);transform: scale(1,1);}
+    20%   {-ms-transform: scale(1,1);-webkit-transform: scale(1,1);transform: scale(1,1);}
+    25%  {-ms-transform: scale(1,1);-webkit-transform: scale(1,1);transform: scale(1,1);}
+    100% {-ms-transform: scale(2,2);-webkit-transform: scale(2,2);transform: scale(2,2);}
+}
+
+/* Standard syntax */
+@keyframes myfirst_scale {
+    0%   {-ms-transform: scale(1,1);-webkit-transform: scale(1,1);transform: scale(1,1);}
+    25%  {-ms-transform: scale(2,2);-webkit-transform: scale(2,2);transform: scale(2,2);}
+    50%  {-ms-transform: scale(4,4);-webkit-transform: scale(4,4);transform: scale(4,4);}
+    75%  {-ms-transform: scale(6,6);-webkit-transform: scale(6,6);transform: scale(6,6);}
+    100% {-ms-transform: scale(8,8);-webkit-transform: scale(8,8);transform: scale(8,8);}
+}
+/* Standard syntax */
+@keyframes myfirst_bg {
+    0%   {background:red; left:0px; top:0px;}
+    25%  {background:yellow; left:200px; top:0px;}
+    50%  {background:blue; left:200px; top:200px;}
+    75%  {background:green; left:0px; top:200px;}
+    100% {background:red; left:0px; top:0px;}
+}

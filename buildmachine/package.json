@@ -1,0 +1,16 @@
+{
+  "name": "BuildMachine",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "mkdirps": "*",
+    "body-parser": "*",
+    "express": "*",
+    "busboy": "*"
+  },
+  "author": "Mandice Contributors",
+  "license": "MIT"
+}
