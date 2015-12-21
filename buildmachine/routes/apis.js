@@ -105,7 +105,7 @@ router.post('/post', urlencodedParser , function(req, res) {
 		});	
 		build.arduino(UploadPath, src, tmphex, function(err, output){
 			console.log('Done. ' + output);
-			res.send('Done. ' + output);
+			res.send('Done. ' + path.join(tmppath, output));
 		});
   	}
   
