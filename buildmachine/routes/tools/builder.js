@@ -15,7 +15,7 @@ BuildMachine.prototype.arduino = function (UploadPath, src, tmphex, callback){
 	var output='main.o';
 	var outputhex='main.hex';
 	var cmdStr = "avr-gcc " + "-DF_CPU=" + D_CPU + " -mmcu=" + mcu + " -o " + path.join(tmppath, output) + " " + tmpdl;
-        var cmdHexStr = "avr-objcopy -O ihex -R .eeprom " + path.join(tmppath, output) +  path.join(tmppath, outputhex) ;
+    var cmdHexStr = "avr-objcopy -O ihex -R .eeprom " + path.join(tmppath, output) +  " " +  path.join(tmppath, outputhex) ;
 	console.log("cmdStr: " + cmdStr);
 
 	child_process.exec(cmdStr, function(err,cmdout,cmderr){
