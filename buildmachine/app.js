@@ -10,6 +10,7 @@ var app = express();
 
 // 設定public目錄為靜態網頁
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'build')));
 
 // 設定bodyParser支援application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ 
