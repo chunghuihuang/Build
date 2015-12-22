@@ -13,7 +13,9 @@ BuildMachine.prototype.arduino = function (UploadPath, src, tmphex, callback){
 	var D_CPU='16000000UL';
 	var mcu='atmega328p';
 	var output='main.o';
+	var outputhex='main.hex';
 	var cmdStr = "avr-gcc " + "-DF_CPU=" + D_CPU + " -mmcu=" + mcu + " -o " + path.join(tmppath, output) + " " + tmpdl;
+        var cmdHexStr = "avr-objcopy -O ihex -R .eeprom " + path.join(tmppath, output) +  path.join(tmppath, outputhex) ;
 	console.log("cmdStr: " + cmdStr);
 
 	child_process.exec(cmdStr, function(err,cmdout,cmderr){
@@ -24,9 +26,22 @@ BuildMachine.prototype.arduino = function (UploadPath, src, tmphex, callback){
 		} else {
 			console.log(cmdout);
 			console.log('child_process.exec is done. ');
-			if(typeof(callback)=='function'){
-				return callback(null, output);
-			};
+			//if(typeof(callback)=='function'){
+			//	return callback(null, output);
+			//};
+			child_process.exec(cmdHexStr, function(err,cmdout,cmderr){
+				if(err) {
+					console.log(cmdout);
+					console.log('build_patchbuild error: '+cmderr);
+					return callback(err);
+				} else {
+					console.log(cmdout);
+					console.log('child_process.exec is done. ');
+					if(typeof(callback)=='function'){
+						return callback(null, outputhex );
+					};
+				}
+			});
 		}
 	});
 };
