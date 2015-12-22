@@ -14,7 +14,8 @@ BuildMachine.prototype.arduino = function (UploadPath, src, tmphex, callback){
 	var mcu='atmega328p';
 	var output='main.o';
 	var outputhex='main.hex';
-	var cmdStr = "avr-gcc " + "-DF_CPU=" + D_CPU + " -mmcu=" + mcu + " -o " + path.join(tmppath, output) + " " + tmpdl;
+	//$ avr-gcc -g -DF_CPU=9600000 -Wall -L/usr/avr/lib -Os -mmcu=attiny13a -o tmp.elf tmp.o 
+	var cmdStr = "avr-gcc " + "-DF_CPU=" + D_CPU + " -Wall -build/libraries -mmcu=" + mcu + " -o " + path.join(tmppath, output) + " " + tmpdl;
     var cmdHexStr = "avr-objcopy -O ihex -R .eeprom " + path.join(tmppath, output) +  " " +  path.join(tmppath, outputhex) ;
 	console.log("cmdStr: " + cmdStr);
 
