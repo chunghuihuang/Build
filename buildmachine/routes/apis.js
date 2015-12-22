@@ -103,9 +103,10 @@ router.post('/post', urlencodedParser , function(req, res) {
 				});
 			}
 		});	
+		var hexpath = path.join(tmppath, output);
 		build.arduino(UploadPath, src, tmphex, function(err, output){
 			console.log('Done. ' + output);
-			res.send('Done. ' + path.join(tmppath, output));
+			res.send('Done. ' + hexpath);
 		});
   	}
   
