@@ -19,133 +19,342 @@
   Free Software Foundation, Inc., 59 Temple Place, Suite 330,
   Boston, MA  02111-1307  USA
 
-  $Id$
+  $Id: wiring.c 164 2006-08-26 09:56:40Z mellis $
 */
 
-#include "wiring_private.h"
+#include <avr/io.h>
+#include <avr/interrupt.h>
+#include <avr/signal.h>
+#include <avr/delay.h>
+#include <stdio.h>
+#include <stdarg.h>
 
-// the prescaler is set so that timer0 ticks every 64 clock cycles, and the
-// the overflow handler is called every 256 ticks.
-#define MICROSECONDS_PER_TIMER0_OVERFLOW (clockCyclesToMicroseconds(64 * 256))
-
-// the whole number of milliseconds per timer0 overflow
-#define MILLIS_INC (MICROSECONDS_PER_TIMER0_OVERFLOW / 1000)
-
-// the fractional number of milliseconds per timer0 overflow. we shift right
-// by three to fit these numbers into a byte. (for the clock speeds we care
-// about - 8 and 16 MHz - this doesn't lose precision.)
-#define FRACT_INC ((MICROSECONDS_PER_TIMER0_OVERFLOW % 1000) >> 3)
-#define FRACT_MAX (1000 >> 3)
-
-volatile unsigned long timer0_overflow_count = 0;
-volatile unsigned long timer0_millis = 0;
-static unsigned char timer0_fract = 0;
-
-#if defined(__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
-ISR(TIM0_OVF_vect)
-#else
-ISR(TIMER0_OVF_vect)
+#ifndef cbi
+#define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
 #endif
-{
-	// copy these to local variables so they can be stored in registers
-	// (volatile variables must be read from memory on every access)
-	unsigned long m = timer0_millis;
-	unsigned char f = timer0_fract;
+#ifndef sbi
+#define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
+#endif
 
-	m += MILLIS_INC;
-	f += FRACT_INC;
-	if (f >= FRACT_MAX) {
-		f -= FRACT_MAX;
-		m += 1;
+// from Pascal's avrlib
+#include "uart.h"
+
+#include "wiring.h"
+
+// The number of times timer 0 has overflowed since the program started.
+// Must be volatile or gcc will optimize away some uses of it.
+volatile unsigned long timer0_overflow_count;
+
+// Get the hardware port of the given virtual pin number.  This comes from
+// the pins_*.c file for the active board configuration.
+int digitalPinToPort(int pin)
+{
+	return digital_pin_to_port[pin].port;
+}
+
+// Get the bit location within the hardware port of the given virtual pin.
+// This comes from the pins_*.c file for the active board configuration.
+int digitalPinToBit(int pin)
+{
+	return digital_pin_to_port[pin].bit;
+}
+
+int analogOutPinToTimer(int pin)
+{
+	return analog_out_pin_to_timer[pin];
+}
+
+int analogInPinToBit(int pin)
+{
+	return analog_in_pin_to_port[pin].bit;
+}
+
+void pinMode(int pin, int mode)
+{
+	if (digitalPinToPort(pin) != NOT_A_PIN) {
+		if (mode == INPUT)
+			cbi(_SFR_IO8(port_to_mode[digitalPinToPort(pin)]),
+				digitalPinToBit(pin));
+		else
+			sbi(_SFR_IO8(port_to_mode[digitalPinToPort(pin)]),
+				digitalPinToBit(pin));
+	}
+}
+
+void digitalWrite(int pin, int val)
+{
+	if (digitalPinToPort(pin) != NOT_A_PIN) {
+		// If the pin that support PWM output, we need to turn it off
+		// before doing a digital write.
+
+		if (analogOutPinToTimer(pin) == TIMER1A)
+			cbi(TCCR1A, COM1A1);
+
+		if (analogOutPinToTimer(pin) == TIMER1B)
+			cbi(TCCR1A, COM1B1);
+			
+#if defined(__AVR_ATmega168__)
+		if (analogOutPinToTimer(pin) == TIMER2A)
+			cbi(TCCR2A, COM2A1);
+			
+		if (analogOutPinToTimer(pin) == TIMER2B)
+			cbi(TCCR2A, COM2B1);
+#else
+		if (analogOutPinToTimer(pin) == TIMER2)
+			cbi(TCCR2, COM21);
+#endif
+
+		if (val == LOW)
+			cbi(_SFR_IO8(port_to_output[digitalPinToPort(pin)]),
+				digitalPinToBit(pin));
+		else
+			sbi(_SFR_IO8(port_to_output[digitalPinToPort(pin)]),
+				digitalPinToBit(pin));
+	}
+}
+
+int digitalRead(int pin)
+{
+	if (digitalPinToPort(pin) != NOT_A_PIN) {
+		// If the pin that support PWM output, we need to turn it off
+		// before getting a digital reading.
+
+		if (analogOutPinToTimer(pin) == TIMER1A)
+			cbi(TCCR1A, COM1A1);
+
+		if (analogOutPinToTimer(pin) == TIMER1B)
+			cbi(TCCR1A, COM1B1);
+			
+#if defined(__AVR_ATmega168__)
+		if (analogOutPinToTimer(pin) == TIMER2A)
+			cbi(TCCR2A, COM2A1);
+			
+		if (analogOutPinToTimer(pin) == TIMER2B)
+			cbi(TCCR2A, COM2B1);
+#else
+		if (analogOutPinToTimer(pin) == TIMER2)
+			cbi(TCCR2, COM21);
+#endif
+
+		return (_SFR_IO8(port_to_input[digitalPinToPort(pin)]) >>
+			digitalPinToBit(pin)) & 0x01;
+	}
+	
+	return LOW;
+}
+
+int analogRead(int pin)
+{
+	unsigned int low, high, ch = analogInPinToBit(pin);
+
+	// the low 4 bits of ADMUX select the ADC channel
+	ADMUX = (ADMUX & (unsigned int) 0xf0) | (ch & (unsigned int) 0x0f);
+
+	// without a delay, we seem to read from the wrong channel
+	delay(1);
+
+	// start the conversion
+	sbi(ADCSRA, ADSC);
+
+	// ADSC is cleared when the conversion finishes
+	while (bit_is_set(ADCSRA, ADSC));
+
+	// we have to read ADCL first; doing so locks both ADCL
+	// and ADCH until ADCH is read.  reading ADCL second would
+	// cause the results of each conversion to be discarded,
+	// as ADCL and ADCH would be locked when it completed.
+	low = ADCL;
+	high = ADCH;
+
+	// combine the two bytes
+	return (high << 8) | low;
+}
+
+// Right now, PWM output only works on the pins with
+// hardware support.  These are defined in the appropriate
+// pins_*.c file.  For the rest of the pins, we default
+// to digital output.
+void analogWrite(int pin, int val)
+{
+	// We need to make sure the PWM output is enabled for those pins
+	// that support it, as we turn it off when digitally reading or
+	// writing with them.  Also, make sure the pin is in output mode
+	// for consistenty with Wiring, which doesn't require a pinMode
+	// call for the analog output pins.
+	pinMode(pin, OUTPUT);
+	
+	if (analogOutPinToTimer(pin) == TIMER1A) {
+		// connect pwm to pin on timer 1, channel A
+		sbi(TCCR1A, COM1A1);
+		// set pwm duty
+		OCR1A = val;
+	} else if (analogOutPinToTimer(pin) == TIMER1B) {
+		// connect pwm to pin on timer 1, channel B
+		sbi(TCCR1A, COM1B1);
+		// set pwm duty
+		OCR1B = val;
+#if defined(__AVR_ATmega168__)
+	} else if (analogOutPinToTimer(pin) == TIMER2A) {
+		// connect pwm to pin on timer 2, channel A
+		sbi(TCCR2A, COM2A1);
+		// set pwm duty
+		OCR2A = val;	
+	} else if (analogOutPinToTimer(pin) == TIMER2B) {
+		// connect pwm to pin on timer 2, channel B
+		sbi(TCCR2A, COM2B1);
+		// set pwm duty
+		OCR2B = val;
+#else
+	} else if (analogOutPinToTimer(pin) == TIMER2) {
+		// connect pwm to pin on timer 2, channel B
+		sbi(TCCR2, COM21);
+		// set pwm duty
+		OCR2 = val;
+#endif
+	} else if (val < 128)
+		digitalWrite(pin, LOW);
+	else
+		digitalWrite(pin, HIGH);
+}
+
+void beginSerial(long baud)
+{
+	uartInit();
+	uartSetBaudRate(baud);
+}
+
+void serialWrite(unsigned char c)
+{
+	uartSendByte(c);
+}
+
+int serialAvailable()
+{
+	return uartGetRxBuffer()->datalength;
+}
+
+int serialRead()
+{
+	return uartGetByte();
+}
+
+void printMode(int mode)
+{
+	// do nothing, we only support serial printing, not lcd.
+}
+
+void printByte(unsigned char c)
+{
+	serialWrite(c);
+}
+
+void printNewline()
+{
+	printByte('\n');
+}
+
+void printString(char *s)
+{
+	while (*s)
+		printByte(*s++);
+}
+
+void printIntegerInBase(unsigned long n, unsigned long base)
+{ 
+	unsigned char buf[8 * sizeof(long)]; // Assumes 8-bit chars. 
+	unsigned long i = 0;
+
+	if (n == 0) {
+		printByte('0');
+		return;
+	} 
+
+	while (n > 0) {
+		buf[i++] = n % base;
+		n /= base;
 	}
 
-	timer0_fract = f;
-	timer0_millis = m;
+	for (; i > 0; i--)
+		printByte(buf[i - 1] < 10 ?
+			'0' + buf[i - 1] :
+			'A' + buf[i - 1] - 10);
+}
+
+void printInteger(long n)
+{
+	if (n < 0) {
+		printByte('-');
+		n = -n;
+	}
+
+	printIntegerInBase(n, 10);
+}
+
+void printHex(unsigned long n)
+{
+	printIntegerInBase(n, 16);
+}
+
+void printOctal(unsigned long n)
+{
+	printIntegerInBase(n, 8);
+}
+
+void printBinary(unsigned long n)
+{
+	printIntegerInBase(n, 2);
+}
+
+/* Including print() adds approximately 1500 bytes to the binary size,
+ * so we replace it with the smaller and less-confusing printString(),
+ * printInteger(), etc.
+void print(const char *format, ...)
+{
+	char buf[256];
+	va_list ap;
+	
+	va_start(ap, format);
+	vsnprintf(buf, 256, format, ap);
+	va_end(ap);
+	
+	printString(buf);
+}
+*/
+
+SIGNAL(SIG_OVERFLOW0)
+{
 	timer0_overflow_count++;
 }
 
 unsigned long millis()
 {
-	unsigned long m;
-	uint8_t oldSREG = SREG;
-
-	// disable interrupts while we read timer0_millis or we might get an
-	// inconsistent value (e.g. in the middle of a write to timer0_millis)
-	cli();
-	m = timer0_millis;
-	SREG = oldSREG;
-
-	return m;
-}
-
-unsigned long micros() {
-	unsigned long m;
-	uint8_t oldSREG = SREG, t;
+	// timer 0 increments every 8 cycles, and overflows when it reaches 256.
+	// we calculate the total number of clock cycles, then divide by the
+	// number of clock cycles per millisecond.
+	//return timer0_overflow_count * 8UL * 256UL / (F_CPU / 1000UL);
 	
-	cli();
-	m = timer0_overflow_count;
-#if defined(TCNT0)
-	t = TCNT0;
-#elif defined(TCNT0L)
-	t = TCNT0L;
-#else
-	#error TIMER 0 not defined
-#endif
-
-  
-#ifdef TIFR0
-	if ((TIFR0 & _BV(TOV0)) && (t < 255))
-		m++;
-#else
-	if ((TIFR & _BV(TOV0)) && (t < 255))
-		m++;
-#endif
-
-	SREG = oldSREG;
-	
-	return ((m << 8) + t) * (64 / clockCyclesPerMicrosecond());
+	// calculating the total number of clock cycles overflows an
+	// unsigned long, so instead find 1/128th the number of clock cycles
+	// and divide by 1/128th the number of clock cycles per millisecond.
+	return timer0_overflow_count * 8UL * 2UL / (F_CPU / 128000UL);
 }
 
 void delay(unsigned long ms)
 {
-	uint16_t start = (uint16_t)micros();
-
-	while (ms > 0) {
-		yield();
-		if (((uint16_t)micros() - start) >= 1000) {
-			ms--;
-			start += 1000;
-		}
-	}
+	unsigned long start = millis();
+	
+	while (millis() - start < ms)
+		;
 }
 
-/* Delay for the given number of microseconds.  Assumes a 8 or 16 MHz clock. */
+/* Delay for the given number of microseconds.  Assumes a 16 MHz clock. 
+ * Disables interrupts, which will disrupt the millis() function if used
+ * too frequently. */
 void delayMicroseconds(unsigned int us)
 {
 	// calling avrlib's delay_us() function with low values (e.g. 1 or
 	// 2 microseconds) gives delays longer than desired.
 	//delay_us(us);
-#if F_CPU >= 20000000L
-	// for the 20 MHz clock on rare Arduino boards
-
-	// for a one-microsecond delay, simply wait 2 cycle and return. The overhead
-	// of the function call yields a delay of exactly a one microsecond.
-	__asm__ __volatile__ (
-		"nop" "\n\t"
-		"nop"); //just waiting 2 cycle
-	if (--us == 0)
-		return;
-
-	// the following loop takes a 1/5 of a microsecond (4 cycles)
-	// per iteration, so execute it five times for each microsecond of
-	// delay requested.
-	us = (us<<2) + us; // x5 us
-
-	// account for the time taken in the preceeding commands.
-	us -= 2;
-
-#elif F_CPU >= 16000000L
-	// for the 16 MHz clock on most Arduino boards
 
 	// for a one-microsecond delay, simply return.  the overhead
 	// of the function call yields a delay of approximately 1 1/8 us.
@@ -159,75 +368,90 @@ void delayMicroseconds(unsigned int us)
 
 	// account for the time taken in the preceeding commands.
 	us -= 2;
-#else
-	// for the 8 MHz internal clock on the ATmega168
 
-	// for a one- or two-microsecond delay, simply return.  the overhead of
-	// the function calls takes more than two microseconds.  can't just
-	// subtract two, since us is unsigned; we'd overflow.
-	if (--us == 0)
-		return;
-	if (--us == 0)
-		return;
-
-	// the following loop takes half of a microsecond (4 cycles)
-	// per iteration, so execute it twice for each microsecond of
-	// delay requested.
-	us <<= 1;
-    
-	// partially compensate for the time taken by the preceeding commands.
-	// we can't subtract any more than this or we'd overflow w/ small delays.
-	us--;
-#endif
+	// disable interrupts, otherwise the timer 0 overflow interrupt that
+	// tracks milliseconds will make us delay longer than we want.
+	cli();
 
 	// busy wait
 	__asm__ __volatile__ (
 		"1: sbiw %0,1" "\n\t" // 2 cycles
 		"brne 1b" : "=w" (us) : "0" (us) // 2 cycles
 	);
+
+	// reenable interrupts.
+	sei();
 }
 
-void init()
+/*
+unsigned long pulseIn(int pin, int state)
+{
+	unsigned long width = 0;
+
+	while (digitalRead(pin) == !state)
+		;
+		
+	while (digitalRead(pin) != !state)
+		width++;
+		
+	return width * 17 / 2; // convert to microseconds
+}
+*/
+
+/* Measures the length (in microseconds) of a pulse on the pin; state is HIGH
+ * or LOW, the type of pulse to measure.  Works on pulses from 10 microseconds
+ * to 3 minutes in length, but must be called at least N microseconds before
+ * the start of the pulse. */
+unsigned long pulseIn(int pin, int state)
+{
+	// cache the port and bit of the pin in order to speed up the
+	// pulse width measuring loop and achieve finer resolution.  calling
+	// digitalRead() instead yields much coarser resolution.
+	int r = port_to_input[digitalPinToPort(pin)];
+	int bit = digitalPinToBit(pin);
+	int mask = 1 << bit;
+	unsigned long width = 0;
+
+	// compute the desired bit pattern for the port reading (e.g. set or
+	// clear the bit corresponding to the pin being read).  the !!state
+	// ensures that the function treats any non-zero value of state as HIGH.
+	state = (!!state) << bit;
+
+	// wait for the pulse to start
+	while ((_SFR_IO8(r) & mask) != state)
+		;
+	
+	// wait for the pulse to stop
+	while ((_SFR_IO8(r) & mask) == state)
+		width++;
+	
+	// convert the reading to microseconds.  the slower the CPU speed, the
+	// proportionally fewer iterations of the loop will occur (e.g. a 
+	// 4 MHz clock will yield a width that is one-fourth of that read with
+	// a 16 MHz clock).  each loop was empirically determined to take
+	// approximately 23/20 of a microsecond with a 16 MHz clock.
+	return width * (16000000UL / F_CPU) * 20 / 23;
+}
+
+int main(void)
 {
 	// this needs to be called before setup() or some functions won't
 	// work there
 	sei();
 	
-	// on the ATmega168, timer 0 is also used for fast hardware pwm
-	// (using phase-correct PWM would mean that timer 0 overflowed half as often
-	// resulting in different millis() behavior on the ATmega8 and ATmega168)
-#if defined(TCCR0A) && defined(WGM01)
-	sbi(TCCR0A, WGM01);
-	sbi(TCCR0A, WGM00);
-#endif  
-
-	// set timer 0 prescale factor to 64
-#if defined(__AVR_ATmega128__)
-	// CPU specific: different values for the ATmega128
-	sbi(TCCR0, CS02);
-#elif defined(TCCR0) && defined(CS01) && defined(CS00)
-	// this combination is for the standard atmega8
-	sbi(TCCR0, CS01);
-	sbi(TCCR0, CS00);
-#elif defined(TCCR0B) && defined(CS01) && defined(CS00)
-	// this combination is for the standard 168/328/1280/2560
+	// timer 0 is used for millis() and delay()
+	timer0_overflow_count = 0;
+	// set timer 0 prescale factor to 8
+#if defined(__AVR_ATmega168__)
 	sbi(TCCR0B, CS01);
-	sbi(TCCR0B, CS00);
-#elif defined(TCCR0A) && defined(CS01) && defined(CS00)
-	// this combination is for the __AVR_ATmega645__ series
-	sbi(TCCR0A, CS01);
-	sbi(TCCR0A, CS00);
 #else
-	#error Timer 0 prescale factor 64 not set correctly
+	sbi(TCCR0, CS01);
 #endif
-
 	// enable timer 0 overflow interrupt
-#if defined(TIMSK) && defined(TOIE0)
-	sbi(TIMSK, TOIE0);
-#elif defined(TIMSK0) && defined(TOIE0)
+#if defined(__AVR_ATmega168__)
 	sbi(TIMSK0, TOIE0);
 #else
-	#error	Timer 0 overflow interrupt not set correctly
+	sbi(TIMSK, TOIE0);
 #endif
 
 	// timers 1 and 2 are used for phase-correct hardware pwm
@@ -235,73 +459,29 @@ void init()
 	// note, however, that fast pwm mode can achieve a frequency of up
 	// 8 MHz (with a 16 MHz clock) at 50% duty cycle
 
-#if defined(TCCR1B) && defined(CS11) && defined(CS10)
-	TCCR1B = 0;
-
 	// set timer 1 prescale factor to 64
 	sbi(TCCR1B, CS11);
-#if F_CPU >= 8000000L
 	sbi(TCCR1B, CS10);
-#endif
-#elif defined(TCCR1) && defined(CS11) && defined(CS10)
-	sbi(TCCR1, CS11);
-#if F_CPU >= 8000000L
-	sbi(TCCR1, CS10);
-#endif
-#endif
 	// put timer 1 in 8-bit phase correct pwm mode
-#if defined(TCCR1A) && defined(WGM10)
 	sbi(TCCR1A, WGM10);
-#elif defined(TCCR1)
-	#warning this needs to be finished
-#endif
 
 	// set timer 2 prescale factor to 64
-#if defined(TCCR2) && defined(CS22)
-	sbi(TCCR2, CS22);
-#elif defined(TCCR2B) && defined(CS22)
+#if defined(__AVR_ATmega168__)
 	sbi(TCCR2B, CS22);
 #else
-	#warning Timer 2 not finished (may not be present on this CPU)
+	sbi(TCCR2, CS22);
 #endif
-
 	// configure timer 2 for phase correct pwm (8-bit)
-#if defined(TCCR2) && defined(WGM20)
-	sbi(TCCR2, WGM20);
-#elif defined(TCCR2A) && defined(WGM20)
+#if defined(__AVR_ATmega168__)
 	sbi(TCCR2A, WGM20);
 #else
-	#warning Timer 2 not finished (may not be present on this CPU)
+	sbi(TCCR2, WGM20);
 #endif
 
-#if defined(TCCR3B) && defined(CS31) && defined(WGM30)
-	sbi(TCCR3B, CS31);		// set timer 3 prescale factor to 64
-	sbi(TCCR3B, CS30);
-	sbi(TCCR3A, WGM30);		// put timer 3 in 8-bit phase correct pwm mode
-#endif
+	// set a2d reference to AVCC (5 volts)
+	cbi(ADMUX, REFS1);
+	sbi(ADMUX, REFS0);
 
-#if defined(TCCR4A) && defined(TCCR4B) && defined(TCCR4D) /* beginning of timer4 block for 32U4 and similar */
-	sbi(TCCR4B, CS42);		// set timer4 prescale factor to 64
-	sbi(TCCR4B, CS41);
-	sbi(TCCR4B, CS40);
-	sbi(TCCR4D, WGM40);		// put timer 4 in phase- and frequency-correct PWM mode	
-	sbi(TCCR4A, PWM4A);		// enable PWM mode for comparator OCR4A
-	sbi(TCCR4C, PWM4D);		// enable PWM mode for comparator OCR4D
-#else /* beginning of timer4 block for ATMEGA1280 and ATMEGA2560 */
-#if defined(TCCR4B) && defined(CS41) && defined(WGM40)
-	sbi(TCCR4B, CS41);		// set timer 4 prescale factor to 64
-	sbi(TCCR4B, CS40);
-	sbi(TCCR4A, WGM40);		// put timer 4 in 8-bit phase correct pwm mode
-#endif
-#endif /* end timer4 block for ATMEGA1280/2560 and similar */	
-
-#if defined(TCCR5B) && defined(CS51) && defined(WGM50)
-	sbi(TCCR5B, CS51);		// set timer 5 prescale factor to 64
-	sbi(TCCR5B, CS50);
-	sbi(TCCR5A, WGM50);		// put timer 5 in 8-bit phase correct pwm mode
-#endif
-
-#if defined(ADCSRA)
 	// set a2d prescale factor to 128
 	// 16 MHz / 128 = 125 KHz, inside the desired 50-200 KHz range.
 	// XXX: this will not work properly for other clock speeds, and
@@ -312,14 +492,11 @@ void init()
 
 	// enable a2d conversions
 	sbi(ADCSRA, ADEN);
-#endif
-
-	// the bootloader connects pins 0 and 1 to the USART; disconnect them
-	// here so they can be used as normal digital i/o; they will be
-	// reconnected in Serial.begin()
-#if defined(UCSRB)
-	UCSRB = 0;
-#elif defined(UCSR0B)
-	UCSR0B = 0;
-#endif
+	
+	setup();
+	
+	for (;;)
+		loop();
+		
+	return 0;
 }
