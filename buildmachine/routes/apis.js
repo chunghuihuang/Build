@@ -73,7 +73,7 @@ router.get('/complier', function(req, res) {
 // http://localhost:9000/apis/post
 router.post('/post', urlencodedParser , function(req, res) {
 	var build = new BuildMachine();
-	var UploadPath = 'build/';
+	var UploadPath = 'public/';
 	var src = 'main.c';
 
 	if(!req.body || req.body.length === 0) {
