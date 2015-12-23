@@ -39,7 +39,7 @@ BuildMachine.prototype.arduino = function (UploadPath, src, tmphex, callback){
 					console.log(cmdout);
 					console.log('child_process.exec is done. ');
 					if(typeof(callback)=='function'){
-						return callback(null, outputhex );
+						return callback(null, tmphex );
 					};
 				}
 			});
