@@ -10,7 +10,7 @@ BuildMachine.prototype.arduino = function (UploadPath, src, tmphex, callback){
 	var tmppath = path.join(UploadPath, tmphex);
 	var tmpdl = path.join(tmppath, src);
 
-	var D_CPU='16000000UL';
+	var D_CPU='16000000';
 	var mcu='atmega328p';
 	var output='blink.o';
 	var outputhex='blink.hex';
