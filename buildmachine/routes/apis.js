@@ -111,7 +111,7 @@ router.post('/post', urlencodedParser , function(req, res) {
 			}
 			else
 			{
-				var hexpath = path.join(tmphex, output);
+				var hexpath = path.join(tmphex, 'main.hex');
 				res.send( hexpath);
 			}
 			
