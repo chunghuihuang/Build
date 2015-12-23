@@ -9,11 +9,11 @@ var fs = require('fs');
 var BuildMachine = require('./tools/builder');
 
 // create application/json parser 
-var jsonParser = bodyParser.json()
+var jsonParser = bodyParser.json();
 var includeIno = '#include <WProgram.h> ';
-var initIno = 'int main(){init();setup();for (;;) {loop();}return 0;}'
+var initIno = 'int main(){init();setup();for (;;) {loop();}return 0;}';
 // create application/x-www-form-urlencoded parser 
-var urlencodedParser = bodyParser.urlencoded({ extended: false })
+var urlencodedParser = bodyParser.urlencoded({ extended: false });
 
 function receiver(req, UploadPath, fileinfo, callback) {
 	var busboy = new Busboy({	
