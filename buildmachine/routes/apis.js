@@ -128,7 +128,7 @@ router.get('/', function(req, res) {
 // http://localhost:9000/apis/test
 router.get('/test', function(req, res) {
 	var build = new BuildMachine();
-	var UploadPath = 'build/';
+	var UploadPath = 'public/';
 	var src = 'main.c';
 	var tmphex = '12345678'
 	

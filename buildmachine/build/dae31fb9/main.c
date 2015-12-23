@@ -1,0 +1,1 @@
+int main{    };int main() { setup();while(1)loop();}
