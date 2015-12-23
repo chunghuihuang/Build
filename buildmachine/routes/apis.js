@@ -10,8 +10,8 @@ var BuildMachine = require('./tools/builder');
 
 // create application/json parser 
 var jsonParser = bodyParser.json()
-var initIno = '';
-//var initIno = 'int main(){init();initVariant();setup();for (;;) {loop();}return 0;}'
+//var initIno = '';
+var initIno = 'int main(){init();setup();for (;;) {loop();}return 0;}'
 // create application/x-www-form-urlencoded parser 
 var urlencodedParser = bodyParser.urlencoded({ extended: false })
 
