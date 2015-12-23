@@ -9,7 +9,7 @@ var BuildMachine = module.exports = function() {
 BuildMachine.prototype.arduino = function (UploadPath, src, tmphex, callback){
 	var tmppath = path.join(UploadPath, tmphex);
 	var tmpdl = path.join(tmppath, src);
-
+    console.log("tmppath: " + tmppath);
 	var D_CPU='16000000UL';
 	var mcu='atmega328p';
 	var output='main.o';
