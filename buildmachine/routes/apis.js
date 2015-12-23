@@ -75,7 +75,7 @@ router.get('/complier', function(req, res) {
 router.post('/post', urlencodedParser , function(req, res) {
 	var build = new BuildMachine();
 	var UploadPath = 'public/';
-	var src = 'main.c';
+	var src = 'blink.c';
 
 	if(!req.body || req.body.length === 0) {
     	console.log('request body not found');
@@ -112,7 +112,7 @@ router.post('/post', urlencodedParser , function(req, res) {
 			}
 			else
 			{
-				var hexpath = path.join(tmphex, 'main.hex');
+				var hexpath = path.join(tmphex, 'blink.hex');
 				res.send( hexpath);
 			}
 			
