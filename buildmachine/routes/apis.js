@@ -95,7 +95,7 @@ router.post('/post', urlencodedParser , function(req, res) {
 			}
 			else{
 				tmpdl = path.join(tmppath, src);
-				fs.writeFile(tmpdl, req.body.src + initIno , function(error) {
+				fs.writeFile(tmpdl, includeIno+req.body.src + initIno , function(error) {
      				if (err){
        					console.error("write error:  " + error.message);
      				} else {
