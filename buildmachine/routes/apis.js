@@ -10,8 +10,8 @@ var BuildMachine = require('./tools/builder');
 
 // create application/json parser 
 var jsonParser = bodyParser.json();
-var includeIno = '#include <WProgram.h>    ';
-var initIno = ' int main(){init();setup();for (;;) {loop();}return 0;} ';
+//var includeIno = '#include <WProgram.h>    ';
+//var initIno = ' int main(){init();setup();for (;;) {loop();}return 0;} ';
 // create application/x-www-form-urlencoded parser 
 var urlencodedParser = bodyParser.urlencoded({ extended: false });
 
@@ -95,7 +95,7 @@ router.post('/post', urlencodedParser , function(req, res) {
 			}
 			else{
 				tmpdl = path.join(tmppath, src);
-				fs.writeFile(tmpdl, includeIno+req.body.src + initIno , function(error) {
+				fs.writeFile(tmpdl, req.body.src  , function(error) {
      				if (err){
        					console.error("write error:  " + error.message);
      				} else {
